@@ -1,0 +1,33 @@
+- name: Configuring Hadoop Client
+  hosts: localhost
+  vars_prompt:
+  - name: name_ip
+    prompt: "Enter namenode IP Address"
+    private: no
+  tasks:
+  - name: Installing JDK software
+    shell: "rpm -i /root/jdk-8u171-linux-x64.rpm"
+    register: java
+  - name: Installing Hadoop Software
+    shell: "rpm -i /root/hadoop-1.2.1-1.x86_64.rpm --force"
+    register: hadoop
+  - name: Configuring core-site file
+    blockinfile:
+      path: "/etc/hadoop/core-site.xml"
+      insertafter: "<configuration>"
+      block:
+        <property>
+        <name>fs.default.name</name>
+        <value>hdfs://{{ name_ip }}:9001</value>
+        </property>
+    register: core
+  - name: client configured
+    shell: "hadoop dfsadmin -report"
+    register: cluster
+  - debug:
+      var: cluster
+  - name: Put data from Client 
+    shell: "hadoop fs -put /ansible/aks.txt /"
+    register: data_put
+  - debug:
+      var: data_put
